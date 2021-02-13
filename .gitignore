@@ -1,6 +1,7 @@
 *.class
 *.pyc
 .idea/workspace.xml
+.idea
 /cpp/run.tests
 /ocaml/_build
 /ocaml/*.native

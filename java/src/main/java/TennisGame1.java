@@ -1,76 +1,87 @@
+import java.util.Map;
 
-public class TennisGame1 implements TennisGame {
-    
-    private int m_score1 = 0;
-    private int m_score2 = 0;
-    private String player1Name;
-    private String player2Name;
+public final class TennisGame1 implements TennisGame {
+
+    private static final Map<Integer, String> SCORE_TO_TEXT = Map.of(
+            0, "Love",
+            1, "Fifteen",
+            2, "Thirty",
+            3, "Forty"
+    );
+
+    private final Player player1;
+    private final Player player2;
 
     public TennisGame1(String player1Name, String player2Name) {
-        this.player1Name = player1Name;
-        this.player2Name = player2Name;
+        this.player1 = new Player(player1Name);
+        this.player2 = new Player(player2Name);
     }
 
+    @Override
     public void wonPoint(String playerName) {
-        if (playerName == "player1")
-            m_score1 += 1;
-        else
-            m_score2 += 1;
+        if (playerName.equals(player1.name)) {
+            player1.incrementScore();
+        } else if (playerName.equals(player2.name)) {
+            player2.incrementScore();
+        } else {
+            throw new IllegalArgumentException("Unknown player " + playerName);
+        }
     }
 
+    @Override
     public String getScore() {
-        String score = "";
-        int tempScore=0;
-        if (m_score1==m_score2)
-        {
-            switch (m_score1)
-            {
-                case 0:
-                        score = "Love-All";
-                    break;
-                case 1:
-                        score = "Fifteen-All";
-                    break;
-                case 2:
-                        score = "Thirty-All";
-                    break;
-                default:
-                        score = "Deuce";
-                    break;
-                
-            }
+        if (player1.scoreSameAs(player2)) {
+            return evenScore();
+        } else if (player1.hasTieBreakableScore() || player2.hasTieBreakableScore()) {
+            return tieBreakScore();
+        } else {
+            return player1.scoreAsText() + "-" + player2.scoreAsText();
         }
-        else if (m_score1>=4 || m_score2>=4)
-        {
-            int minusResult = m_score1-m_score2;
-            if (minusResult==1) score ="Advantage player1";
-            else if (minusResult ==-1) score ="Advantage player2";
-            else if (minusResult>=2) score = "Win for player1";
-            else score ="Win for player2";
+    }
+
+    private String evenScore() {
+        if (player1.scoreAsNumber() >= 3) {
+            return "Deuce";
         }
-        else
-        {
-            for (int i=1; i<3; i++)
-            {
-                if (i==1) tempScore = m_score1;
-                else { score+="-"; tempScore = m_score2;}
-                switch(tempScore)
-                {
-                    case 0:
-                        score+="Love";
-                        break;
-                    case 1:
-                        score+="Fifteen";
-                        break;
-                    case 2:
-                        score+="Thirty";
-                        break;
-                    case 3:
-                        score+="Forty";
-                        break;
-                }
-            }
+
+        return player1.scoreAsText() + "-All";
+    }
+
+    private String tieBreakScore() {
+        int scoreDifference = player1.scoreAsNumber() - player2.scoreAsNumber();
+        if (scoreDifference == 1) return "Advantage " + player1.name;
+        else if (scoreDifference == -1) return "Advantage " + player2.name;
+        else if (scoreDifference >= 2) return "Win for " + player1.name;
+        else return "Win for " + player2.name;
+    }
+
+    private static class Player {
+        private final String name;
+        private int score;
+
+        Player(String name) {
+            this.name = name;
+            this.score = 0;
         }
-        return score;
+
+        void incrementScore() {
+            this.score += 1;
+        }
+
+        String scoreAsText() {
+            return SCORE_TO_TEXT.get(score);
+        }
+
+        int scoreAsNumber() {
+            return score;
+        }
+
+        boolean hasTieBreakableScore() {
+            return score >= 4;
+        }
+
+        boolean scoreSameAs(Player other) {
+            return score == other.score;
+        }
     }
 }
